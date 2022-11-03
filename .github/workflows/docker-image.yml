@@ -15,4 +15,6 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
+      run: docker build . --file Dockerfile --tag itlboy/mysql-backup-s3
+    - name: Push image
+      run: docker push itlboy/mysql-backup-s3
