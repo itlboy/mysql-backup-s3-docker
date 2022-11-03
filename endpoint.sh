@@ -28,3 +28,5 @@ aws --profile default --region default --endpoint-url "$AWS_ENDPOINT_URL" s3 cp 
 
 dt=$(date '+%d/%m/%Y %H:%M:%S');
 echo "$dt: END UPLOAD TO S3"
+
+#test build
