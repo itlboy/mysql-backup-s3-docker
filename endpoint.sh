@@ -21,7 +21,9 @@ du -skh "$BACKUP_FILE";
 dt=$(date '+%d/%m/%Y %H:%M:%S');
 echo "$dt: END DUMP DB, START UPLOAD TO S3"
 
-aws --profile default --region default --endpoint-url "$AWS_ENDPOINT_URL" s3 cp "$BACKUP_FILE" "$DB_DUMP_TARGET"
+BACKUP_DIR=$( date '+%Y/%m/%d' )
+
+aws --profile default --region default --endpoint-url "$AWS_ENDPOINT_URL" s3 cp "$BACKUP_DIR/$BACKUP_FILE" "$DB_DUMP_TARGET"
 
 dt=$(date '+%d/%m/%Y %H:%M:%S');
 echo "$dt: END UPLOAD TO S3"
