@@ -35,6 +35,8 @@ jobs:
         context: .
         #platforms: linux/amd64,linux/arm64
         platforms: linux/amd64
+        cache-from: type=registry,ref=itlboy/mysql-backup-s3:build-cache
+        cache-to: type=registry,ref=itlboy/mysql-backup-s3:build-cache,mode=max
         push: true
         tags: |
-          itlboy/mysql-backup-s3:git-build
+          itlboy/mysql-backup-s3
