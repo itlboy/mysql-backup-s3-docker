@@ -42,15 +42,15 @@ fi
 # === Thêm option phù hợp ===
 DUMP_ARGS="--single-transaction=TRUE -h $DB_SERVER -P $DB_PORT -u $DB_USER -p$DB_PASS"
 
-# Với mariadb-dump: thêm --ssl=0
+# Với mariadb-dump: dùng --ssl=0
 if [[ "$DUMP_BIN" == *"mariadb-dump" ]]; then
     DUMP_ARGS="$DUMP_ARGS --ssl=0"
 else
-    # Với mysqldump: dùng ssl-mode nếu muốn
+    # Với mysqldump: dùng ssl-mode
     DUMP_ARGS="$DUMP_ARGS --ssl-mode=DISABLED"
 fi
 
-# === Dump ===
+# === Thực hiện dump ===
 if [ "$DB_MODE" = "ALL" ]; then
     $DUMP_BIN $DUMP_ARGS --all-databases | gzip -9 > "$BACKUP_FILE"
 else
@@ -60,20 +60,21 @@ else
     done | gzip -9 > "$BACKUP_FILE"
 fi
 
-# === 5. DUNG LƯỢNG FILE ===
+# === 5. HIỂN THỊ DUNG LƯỢNG FILE ===
 du -skh "$BACKUP_FILE"
 
-# === 6. UPLOAD S3 ===
+# === 6. UPLOAD TO S3 (NO MULTIPART) ===
 dt=$(date '+%d/%m/%Y %H:%M:%S');
 echo "$dt: END DUMP DB, START UPLOAD TO S3"
 
 BACKUP_DIR=$( date '+%Y/%m/%d' )
 echo "BACKUP DIR: $BACKUP_DIR"
 
-aws --profile default \
+aws s3 cp "$BACKUP_FILE" "$DB_DUMP_TARGET/$BACKUP_DIR/$BACKUP_FILE" \
+    --no-multipart \
+    --profile default \
     --region default \
-    --endpoint-url "$AWS_ENDPOINT_URL" \
-    s3 cp "$BACKUP_FILE" "$DB_DUMP_TARGET/$BACKUP_DIR/$BACKUP_FILE"
+    --endpoint-url "$AWS_ENDPOINT_URL"
 
 # === 7. KẾT THÚC ===
 dt=$(date '+%d/%m/%Y %H:%M:%S');
