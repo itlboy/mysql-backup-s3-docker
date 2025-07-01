@@ -17,8 +17,8 @@ echo "PORT: $DB_PORT"
 echo "TABLES: $TABLES"
 
 # === 4. CHẾ ĐỘ DUMP: ALL hoặc CUSTOM ===
-DB_MODE=${DB_MODE:-"CUSTOM"}     # "ALL" hoặc "CUSTOM"
-DB_LIST=${DB_LIST:-"$DB_NAME"}   # Dùng biến cũ nếu không có DB_LIST
+DB_MODE=${DB_MODE:-"CUSTOM"}
+DB_LIST=${DB_LIST:-"$DB_NAME"}
 
 if [ "$DB_MODE" = "ALL" ]; then
     echo "MODE: DUMP ALL DATABASES"
@@ -30,32 +30,36 @@ fi
 
 echo "BACKUP FILE: $BACKUP_FILE"
 
-# === 5. BẮT ĐẦU DUMP DATABASE ===
+# === 5. BẮT ĐẦU DUMP DB ===
 dt=$(date '+%d/%m/%Y %H:%M:%S');
 echo "$dt: START DUMP DB"
 
-# Tìm command: ưu tiên mariadb-dump, fallback sang mysqldump
+# Tìm command dump
 DUMP_BIN=$(command -v mariadb-dump || command -v mysqldump)
 
-# Lỗi nếu không tìm thấy binary
 if [ -z "$DUMP_BIN" ]; then
-    echo "❌ Không tìm thấy mysqldump hoặc mariadb-dump!"
+    echo "❌ Không tìm thấy mariadb-dump hoặc mysqldump!"
     exit 1
 fi
 
-# Tắt SSL bắt buộc từ client nếu có
+# Tắt SSL từ phía client
 export MYSQL_SSL_MODE=DISABLED
 
+# Chuẩn bị args chung
+COMMON_ARGS="--single-transaction=TRUE -h $DB_SERVER -P $DB_PORT -u $DB_USER -p$DB_PASS"
+
+# Thêm ssl-mode=DISABLED nếu là mysqldump
+if [[ "$DUMP_BIN" == *"mysqldump" ]]; then
+    COMMON_ARGS="$COMMON_ARGS --ssl-mode=DISABLED"
+fi
+
+# Dump logic
 if [ "$DB_MODE" = "ALL" ]; then
-    $DUMP_BIN --single-transaction=TRUE --ssl-mode=DISABLED \
-        -h "$DB_SERVER" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASS" \
-        --all-databases | gzip -9 > "$BACKUP_FILE"
+    $DUMP_BIN $COMMON_ARGS --all-databases | gzip -9 > "$BACKUP_FILE"
 else
     for DB in $DB_LIST; do
         echo ">> Dumping database: $DB"
-        $DUMP_BIN --single-transaction=TRUE --ssl-mode=DISABLED \
-            -h "$DB_SERVER" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASS" \
-            "$DB" $TABLES
+        $DUMP_BIN $COMMON_ARGS "$DB" $TABLES
     done | gzip -9 > "$BACKUP_FILE"
 fi
 
@@ -77,5 +81,3 @@ aws --profile default \
 # === 8. HOÀN TẤT ===
 dt=$(date '+%d/%m/%Y %H:%M:%S');
 echo "$dt: END UPLOAD TO S3"
-
-# test build
