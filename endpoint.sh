@@ -48,12 +48,12 @@ else
 fi
 
 if [ "$DB_MODE" = "ALL" ]; then
-    $DUMP_BIN $DUMP_ARGS --all-databases | gzip -9 > "$BACKUP_FILE"
+    $DUMP_BIN $DUMP_ARGS --all-databases | gzip > "$BACKUP_FILE"
 else
     for DB in $DB_LIST; do
         echo ">> Dumping database: $DB"
         $DUMP_BIN $DUMP_ARGS "$DB" $TABLES
-    done | gzip -9 > "$BACKUP_FILE"
+    done | gzip > "$BACKUP_FILE"
 fi
 
 # === 5. HIỂN THỊ DUNG LƯỢNG FILE ===
